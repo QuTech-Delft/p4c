@@ -17,6 +17,8 @@
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/simple_switch/version.h.cmake"
   "${CMAKE_CURRENT_BINARY_DIR}/simple_switch/version.h" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/quantum_switch/version.h.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/quantum_switch/version.h" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/psa_switch/version.h.cmake"
   "${CMAKE_CURRENT_BINARY_DIR}/psa_switch/version.h" @ONLY)
 
@@ -30,6 +32,17 @@ set (BMV2_SIMPLE_SWITCH_SRCS
     simple_switch/options.h
     )
 add_cpplint_files (${CMAKE_CURRENT_SOURCE_DIR} "${BMV2_SIMPLE_SWITCH_SRCS}")
+
+# sources for backend executable
+set (BMV2_QUANTUM_SWITCH_SRCS
+    quantum_switch/main.cpp
+    quantum_switch/midend.cpp
+    quantum_switch/midend.h
+    quantum_switch/quantumSwitch.cpp
+    quantum_switch/quantumSwitch.h
+    quantum_switch/options.h
+    )
+add_cpplint_files (${CMAKE_CURRENT_SOURCE_DIR} "${BMV2_QUANTUM_SWITCH_SRCS}")
 
 set (BMV2_PSA_SWITCH_SRCS
     psa_switch/main.cpp
@@ -92,6 +105,11 @@ target_link_libraries (p4c-bm2-ss bmv2backend ${P4C_LIBRARIES} ${P4C_LIB_DEPS})
 
 install(TARGETS p4c-bm2-ss RUNTIME DESTINATION ${P4C_RUNTIME_OUTPUT_DIRECTORY})
 
+build_unified(BMV2_QUANTUM_SWITCH_SRCS)
+add_executable(p4c-bm2-qs ${BMV2_QUANTUM_SWITCH_SRCS})
+target_link_libraries (p4c-bm2-qs bmv2backend ${P4C_LIBRARIES} ${P4C_LIB_DEPS})
+install(TARGETS p4c-bm2-qs RUNTIME DESTINATION ${P4C_RUNTIME_OUTPUT_DIRECTORY})
+
 build_unified(BMV2_PSA_SWITCH_SRCS)
 add_executable(p4c-bm2-psa ${BMV2_PSA_SWITCH_SRCS})
 target_link_libraries (p4c-bm2-psa bmv2backend ${P4C_LIBRARIES} ${P4C_LIB_DEPS})
@@ -114,6 +132,7 @@ file(RELATIVE_PATH
 # remove automake and fix the scripts.
 add_custom_target(linkbmv2
   COMMAND ${CMAKE_COMMAND} -E create_symlink ${CURRENT_BINARY_DIR_PATH_REL}/p4c-bm2-ss ${P4C_BINARY_DIR}/p4c-bm2-ss
+  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CURRENT_BINARY_DIR_PATH_REL}/p4c-bm2-qs ${P4C_BINARY_DIR}/p4c-bm2-qs
   COMMAND ${CMAKE_COMMAND} -E create_symlink ${CURRENT_BINARY_DIR_PATH_REL}/p4c-bm2-psa ${P4C_BINARY_DIR}/p4c-bm2-psa
   COMMAND ${CMAKE_COMMAND} -E create_symlink ${P4C_BINARY_DIR_PATH_REL}/p4include ${CMAKE_CURRENT_BINARY_DIR}/p4include
   COMMAND ${CMAKE_COMMAND} -E create_symlink ${P4C_BINARY_DIR_PATH_REL}/p4_14include ${CMAKE_CURRENT_BINARY_DIR}/p4_14include
@@ -205,6 +224,8 @@ if (HAVE_SIMPLE_SWITCH)
 else()
   MESSAGE(WARNING "BMv2 simple switch is not available, not adding v1model BMv2 tests")
 endif()
+
+MESSAGE(WARNING "BMv2 quantum switch is not available, not adding v1quantum BMv2 tests")
 
 if (HAVE_PSA_SWITCH)
   p4c_add_tests("bmv2" ${BMV2_DRIVER} "${BMV2_PSA_TEST_SUITES}" "${XFAIL_TESTS}" ${testExtraFlags})

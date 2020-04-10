@@ -408,8 +408,12 @@ Visitor::profile_t HeaderConverter::init_apply(const IR::Node* node) {
 
     // always-have metadata instance
     ctxt->json->add_metadata(scalarsTypeName, scalarsName);
-    ctxt->json->add_metadata("standard_metadata", "standard_metadata");
+    addMetadata();
     return Inspector::init_apply(node);
+}
+
+void HeaderConverter::addMetadata() {
+    ctxt->json->add_metadata("standard_metadata", "standard_metadata");
 }
 
 void HeaderConverter::end_apply(const IR::Node*) {

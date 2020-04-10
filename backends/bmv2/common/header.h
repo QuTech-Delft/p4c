@@ -46,6 +46,7 @@ class HeaderConverter : public Inspector {
     void addHeaderType(const IR::Type_StructLike* st);
     void addHeaderField(const cstring& header, const cstring& name, int size, bool is_signed);
     Util::JsonArray* addHeaderUnionFields(cstring hdrName, const IR::Type_HeaderUnion* type);
+    virtual void addMetadata();
 
  public:
     void addTypesAndInstances(const IR::Type_StructLike* type, bool meta);
