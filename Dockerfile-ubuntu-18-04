@@ -1,0 +1,112 @@
+FROM ubuntu:18.04
+
+#------------------------------------------------------------------------------
+# Docker build setup
+#------------------------------------------------------------------------------
+
+# Configure apt
+ENV DEBIAN_FRONTEND noninteractive
+
+# Clone and compile in /opt
+WORKDIR /opt
+
+# Make number of jobs used for compilation configurable - allow separate
+# configuration for P4C compilation as it needs a lot of RAM
+ARG JOBS=1
+ARG P4C_JOBS=$JOBS
+
+# P4C recommends v3.6.1
+ARG PROTOBUF_COMMIT="v3.6.1"
+
+#------------------------------------------------------------------------------
+# Dependencies
+#------------------------------------------------------------------------------
+RUN apt-get update && apt-get -y \
+    -o Dpkg::Options::="--force-confdef" \
+    -o Dpkg::Options::="--force-confold" \
+    upgrade
+
+RUN apt-get -y install --no-install-recommends --fix-missing \
+    automake \
+    bison \
+    cmake \
+    flex \
+    g++ \
+    git \
+    libboost-dev \
+    libboost-filesystem-dev \
+    libboost-graph-dev \
+    libboost-iostreams-dev \
+    libboost-program-options-dev \
+    libboost-system-dev \
+    libboost-test-dev \
+    libboost-thread-dev \
+    libevent-dev \
+    libffi-dev \
+    libfl-dev \
+    libgc-dev \
+    libgmp-dev \
+    libjudy-dev \
+    libpcap-dev \
+    libssl1.0-dev \
+    libtool \
+    llvm \
+    pkg-config \
+    python-dev \
+    python-pip \
+    python-setuptools \
+    python-wheel \
+    python3 \
+    python3-pip \
+    python3-setuptools \
+    python3-wheel \
+    sudo \
+    tcpdump \
+    wget
+
+RUN pip3 install \
+    scapy \
+    ipaddr \
+    ply
+
+#------------------------------------------------------------------------------
+# Protobuf
+#------------------------------------------------------------------------------
+
+RUN git clone https://github.com/google/protobuf.git && \
+    cd protobuf && \
+    git checkout ${PROTOBUF_COMMIT} && \
+    export CFLAGS="-Os" && \
+    export CXXFLAGS="-Os" && \
+    export LDFLAGS="-Wl,-s" && \
+    ./autogen.sh && \
+    ./configure --prefix=/usr && \
+    make -j${JOBS} && \
+    make install && \
+    ldconfig && \
+    unset CFLAGS CXXFLAGS LDFLAGS && \
+    cd python && \
+    python3 setup.py install
+
+#------------------------------------------------------------------------------
+# P4C
+#------------------------------------------------------------------------------
+
+COPY . qp4c/
+RUN cd qp4c && \
+    mkdir -p build && \
+    cd build && \
+    cmake .. && \
+    make -j${P4C_JOBS} && \
+    make install && \
+    ldconfig
+
+#------------------------------------------------------------------------------
+# Change WORKDIR to /workspace and set container to launch bash
+#------------------------------------------------------------------------------
+
+RUN mkdir /workspace
+WORKDIR /workspace
+
+# CMD [ "/bin/bash" ]
+ENTRYPOINT ["/usr/local/bin/p4c"]
