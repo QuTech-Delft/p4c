@@ -110,6 +110,7 @@ ExternConverter_digest ExternConverter_digest::singleton;
 ExternConverter_resubmit ExternConverter_resubmit::singleton;
 ExternConverter_recirculate ExternConverter_recirculate::singleton;
 ExternConverter_mark_to_drop ExternConverter_mark_to_drop::singleton;
+ExternConverter_division32 ExternConverter_division32::singleton;
 ExternConverter_random ExternConverter_random::singleton;
 ExternConverter_truncate ExternConverter_truncate::singleton;
 ExternConverter_register ExternConverter_register::singleton;
@@ -374,6 +375,28 @@ Util::IJson* ExternConverter_mark_to_drop::convertExternFunction(
     auto params = mkParameters(primitive);
     auto dest = ctxt->conv->convert(mc->arguments->at(0)->expression);
     params->append(dest);
+    primitive->emplace_non_null("source_info", s->sourceInfoJsonObj());
+    return primitive;
+}
+
+Util::IJson* ExternConverter_division32::convertExternFunction(
+    UNUSED ConversionContext* ctxt, UNUSED const P4::ExternFunction* ef,
+    UNUSED const IR::MethodCallExpression* mc, UNUSED const IR::StatOrDecl* s,
+    UNUSED const bool emitExterns) {
+    if (mc->arguments->size() != 4) {
+        modelError("Expected 4 arguments for %1%", mc);
+        return nullptr;
+    }
+    auto primitive = mkPrimitive("division32");
+    auto params = mkParameters(primitive);
+    auto quotient = ctxt->conv->convert(mc->arguments->at(0)->expression);
+    auto remainder = ctxt->conv->convert(mc->arguments->at(1)->expression);
+    auto dividend = ctxt->conv->convert(mc->arguments->at(2)->expression);
+    auto divisor = ctxt->conv->convert(mc->arguments->at(3)->expression);
+    params->append(quotient);
+    params->append(remainder);
+    params->append(dividend);
+    params->append(divisor);
     primitive->emplace_non_null("source_info", s->sourceInfoJsonObj());
     return primitive;
 }

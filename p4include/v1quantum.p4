@@ -725,6 +725,14 @@ extern void assert(in bool check);
 extern void assume(in bool check);
 
 /*
+ * HACK: (maybe) Make life easier for now with a division extern.
+ */
+extern void division32(out bit<32> quotient,
+                       out bit<32> remainder,
+                       in bit<32> dividend,
+                       in bit<32> divisor);
+
+/*
  * Log user defined messages
  * Example: log_msg("User defined message");
  * or log_msg("Value1 = {}, Value2 = {}",{value1, value2});
