@@ -102,11 +102,10 @@ RUN cd qp4c && \
     ldconfig
 
 #------------------------------------------------------------------------------
-# Change WORKDIR to /workspace and set container to launch bash
+# Change WORKDIR to /workspace and set p4c as entrypoint
 #------------------------------------------------------------------------------
 
 RUN mkdir /workspace
 WORKDIR /workspace
 
-# CMD [ "/bin/bash" ]
 ENTRYPOINT ["/usr/local/bin/p4c"]

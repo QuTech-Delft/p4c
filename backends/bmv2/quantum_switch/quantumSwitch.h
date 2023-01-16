@@ -46,7 +46,7 @@ class V1QProgramStructure : public ProgramStructure {
 
     const IR::P4Parser* parser = nullptr;
     const IR::P4Control* ingress = nullptr;
-    const IR::P4Control* qdevice = nullptr;
+    const IR::P4Control* qcontrol = nullptr;
     const IR::P4Control* egress = nullptr;
     const IR::P4Control* compute_checksum = nullptr;
     const IR::P4Control* verify_checksum = nullptr;
@@ -54,7 +54,7 @@ class V1QProgramStructure : public ProgramStructure {
 
     const cstring parser_name = "p";
     const cstring ingress_name = "ig";
-    const cstring qdevice_name = "qd";
+    const cstring qcontrol_name = "qc";
     const cstring egress_name = "eg";
     const cstring compute_checksum_name = "ck";
     const cstring verify_checksum_name = "vr";
@@ -66,7 +66,7 @@ class V1QProgramStructure : public ProgramStructure {
 enum class V1QMetadataType {
     NONE,
     STANDARD,
-    QDEVICE,
+    QCONTROL,
     XCONNECT,
 };
 
@@ -104,13 +104,13 @@ class QuantumSwitchExpressionConverter : public ExpressionConverter {
         else if (params->parameters.at(3) == param)
             return V1QMetadataType::XCONNECT;
 
-        params = st->qdevice->getApplyParameters();
+        params = st->qcontrol->getApplyParameters();
         if (params->size() != 4) {
-            modelError("%1%: Expected 4 parameter for qdevice", st->qdevice);
+            modelError("%1%: Expected 4 parameter for qcontrol", st->qcontrol);
             return V1QMetadataType::NONE;
         }
         if (params->parameters.at(2) == param)
-            return V1QMetadataType::QDEVICE;
+            return V1QMetadataType::QCONTROL;
         else if (params->parameters.at(3) == param)
             return V1QMetadataType::XCONNECT;
 
@@ -136,8 +136,8 @@ class QuantumSwitchExpressionConverter : public ExpressionConverter {
             case V1QMetadataType::STANDARD:
                 metadata_name = "standard_metadata";
                 break;
-            case V1QMetadataType::QDEVICE:
-                metadata_name = "qdevice_metadata";
+            case V1QMetadataType::QCONTROL:
+                metadata_name = "qcontrol_metadata";
                 break;
             case V1QMetadataType::XCONNECT:
                 metadata_name = "xconnect_metadata";
@@ -181,7 +181,7 @@ class V1QHeaderConverter : public HeaderConverter {
  protected:
     virtual void addMetadata() override {
         ctxt->json->add_metadata("standard_metadata", "standard_metadata");
-        ctxt->json->add_metadata("qdevice_metadata", "qdevice_metadata");
+        ctxt->json->add_metadata("qcontrol_metadata", "qcontrol_metadata");
         ctxt->json->add_metadata("xconnect_metadata", "xconnect_metadata");
     }
 

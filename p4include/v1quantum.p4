@@ -59,13 +59,13 @@ match_kind {
     selector
 }
 
-enum QDeviceEventType {
+enum QControlEventType {
     heralding_bsm_outcome,
     swap_bsm_outcome,
     cnetwork
 }
 
-enum QDeviceOperation {
+enum QControlOperation {
     /// Do nothing.
     none,
     /// Entangle swap two local qubits.
@@ -74,22 +74,22 @@ enum QDeviceOperation {
     release
 }
 
-@metadata @name("qdevice_metadata")
-struct qdevice_metadata_t {
-    /// Indicates the event which triggered the QDevice pathway.
-    QDeviceEventType event_type;
+@metadata @name("qcontrol_metadata")
+struct qcontrol_metadata_t {
+    /// Indicates the event which triggered the QControl pathway.
+    QControlEventType event_type;
 
     /// Time of this event.
     bit<64> event_timestamp;
 
     /// --------------------------------------------------------------------------------------------
-    /// QDevice operation to execute.
+    /// QControl operation to execute.
     /// --------------------------------------------------------------------------------------------
 
-    QDeviceOperation operation;
+    QControlOperation operation;
 
     /// --------------------------------------------------------------------------------------------
-    /// Parameters for the QDevice operations.
+    /// Parameters for the QControl operations.
     /// --------------------------------------------------------------------------------------------
 
     /// Note that currently port == qubit as the architecture supports only one qubit per port.
@@ -103,7 +103,7 @@ struct qdevice_metadata_t {
     bit<9> swap_qubit_1;
 
     /// --------------------------------------------------------------------------------------------
-    /// Return values from QDevice operations.
+    /// Return values from QControl operations.
     /// --------------------------------------------------------------------------------------------
 
     /// BSM outcome.
@@ -114,19 +114,19 @@ struct qdevice_metadata_t {
 
 enum PathWay {
     cnetwork,
-    qdevice
+    qcontrol
 }
 
 @metadata @name("xconnect_metadata")
 struct xconnect_metadata_t {
-    /// Used to determine which path to take next after Ingress. QDevice infers the next steps from
-    /// the actions that have been set in qdevice_metadata and cross_connect_metatdata.
+    /// Used to determine which path to take next after Ingress. QControl infers the next steps from
+    /// the actions that have been set in qcontrol_metadata and cross_connect_metatdata.
     PathWay pathway;
 
     /// If the packet came from the cnetwork ingress then the ingress port will be indicated.
     bit<9> ingress_port;
 
-    /// Egress spec for a classical packet coming out of QDevice.
+    /// Egress spec for a classical packet coming out of QControl.
     bit<9> egress_spec;
 
     /// BSM group id (key for the BSM replication table). A BSM group groups two objects that are
@@ -767,10 +767,10 @@ control Ingress<H, M>(inout H hdr,
                       inout M meta,
                       inout standard_metadata_t standard_metadata,
                       inout xconnect_metadata_t xconnect_metadata);
-control QDevice<H, M>(inout H hdr,
-                      inout M meta,
-                      inout qdevice_metadata_t qdevice_metadata,
-                      inout xconnect_metadata_t xconnect_metadata);
+control QControl<H, M>(inout H hdr,
+                       inout M meta,
+                       inout qcontrol_metadata_t qcontrol_metadata,
+                       inout xconnect_metadata_t xconnect_metadata);
 control Egress<H, M>(inout H hdr,
                      inout M meta,
                      inout standard_metadata_t standard_metadata,
@@ -793,7 +793,7 @@ control Deparser<H>(packet_out b, in H hdr);
 package V1Quantum<H, M>(Parser<H, M> p,
                         VerifyChecksum<H, M> vr,
                         Ingress<H, M> ig,
-                        QDevice<H, M> qd,
+                        QControl<H, M> qc,
                         Egress<H, M> eg,
                         ComputeChecksum<H, M> ck,
                         Deparser<H> dep

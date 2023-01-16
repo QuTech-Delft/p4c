@@ -65,14 +65,14 @@ bool ParseV1QArchitecture::preorder(const IR::PackageBlock* main) {
     structure->ingress = ingress->to<IR::ControlBlock>()->container;
     structure->pipeline_controls.emplace(ingress_name);
 
-    auto qdevice = main->findParameterValue(structure->qdevice_name);
-    if (qdevice == nullptr || !qdevice->is<IR::ControlBlock>()) {
+    auto qcontrol = main->findParameterValue(structure->qcontrol_name);
+    if (qcontrol == nullptr || !qcontrol->is<IR::ControlBlock>()) {
         modelError("%1%: main package does not match the expected model", main);
         return false;
     }
-    auto qdevice_name = qdevice->to<IR::ControlBlock>()->container->name;
-    structure->qdevice = qdevice->to<IR::ControlBlock>()->container;
-    structure->pipeline_controls.emplace(qdevice_name);
+    auto qcontrol_name = qcontrol->to<IR::ControlBlock>()->container->name;
+    structure->qcontrol = qcontrol->to<IR::ControlBlock>()->container;
+    structure->pipeline_controls.emplace(qcontrol_name);
 
     auto egress = main->findParameterValue(structure->egress_name);
     if (egress == nullptr || !egress->is<IR::ControlBlock>()) {
@@ -143,7 +143,7 @@ Util::IJson* ExternConverter_clone::convertExternFunction(
     }
     cstring prim = ((ei->name == "I2E") ? "clone_ingress_pkt_to_egress" :
                     ((ei->name == "E2E") ? "clone_egress_pkt_to_egress" :
-                     "clone_qdevice_pkt_to_egress"));
+                     "clone_qcontrol_pkt_to_egress"));
     auto session = ctxt->conv->convert(mc->arguments->at(1)->expression);
     auto primitive = mkPrimitive(prim);
     auto parameters = mkParameters(primitive);
@@ -180,7 +180,7 @@ Util::IJson* ExternConverter_clone3::convertExternFunction(
     }
     cstring prim = ((ei->name == "I2E") ? "clone_ingress_pkt_to_egress" :
                     ((ei->name == "E2E") ? "clone_egress_pkt_to_egress" :
-                     "clone_qdevice_pkt_to_egress"));
+                     "clone_qcontrol_pkt_to_egress"));
     auto session = ctxt->conv->convert(mc->arguments->at(1)->expression);
     auto primitive = mkPrimitive(prim);
     auto parameters = mkParameters(primitive);
@@ -1208,8 +1208,8 @@ QuantumSwitchBackend::convert(const IR::ToplevelBlock* tlb) {
     structure->ingress->apply(*cconv);
 
     cconv = new ControlConverter<Standard::Arch::V1MODEL>(
-        ctxt, "qdevice", options.emitExterns);
-    structure->qdevice->apply(*cconv);
+        ctxt, "qcontrol", options.emitExterns);
+    structure->qcontrol->apply(*cconv);
 
     cconv = new ControlConverter<Standard::Arch::V1MODEL>(ctxt,
             "egress", options.emitExterns);
